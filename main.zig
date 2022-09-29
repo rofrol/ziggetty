@@ -13,7 +13,7 @@ const heap = std.heap;
 
 pub fn main() !void {
     var act = os.Sigaction{
-        .sigaction = os.SIG_IGN,
+        .handler = .{ .sigaction = std.os.SIG.IGN },
         .mask = os.empty_sigset,
         .flags = (os.SA_SIGINFO | os.SA_RESTART | os.SA_RESETHAND),
     };
@@ -32,7 +32,7 @@ pub fn main() !void {
         var conn = try srv.accept();
         var pid = try os.fork();
         switch (pid) {
-            0 => blk: {
+            0 => {
                 var buf: [512]u8 = undefined;
 
                 var f = try fs.cwd().openFile("index.html", .{});
@@ -47,11 +47,11 @@ pub fn main() !void {
 
                 // TODO: remove this cast
                 const size = @intCast(usize, stat.size);
-                const sent = try sendfile(conn.file.handle, f.handle, null, size);
+                _ = try sendfile(conn.file.handle, f.handle, null, size);
                 conn.file.close();
                 os.exit(0);
             },
-            else => blk: {
+            else => {
                 conn.file.close();
             },
         }
